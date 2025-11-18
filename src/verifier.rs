@@ -616,7 +616,7 @@ impl BytecodeVerifier {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use silver_core::ObjectID;
+    use crate::bytecode::FunctionSignature;
 
     #[test]
     fn test_simple_function_verification() {
