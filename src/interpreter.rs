@@ -8,46 +8,61 @@
 //! - Error handling
 
 use crate::bytecode::{
-    Bytecode, Constant, Function, FunctionIndex, Instruction, LocalIndex, Module, TypeTag,
+    Constant, Function, FunctionIndex, Instruction, LocalIndex, Module, TypeTag,
 };
 use crate::runtime::Runtime;
 use silver_core::{ObjectID, SilverAddress};
-use std::collections::HashMap;
 use thiserror::Error;
 
-/// Interpreter error types
+/// Interpreter error types for bytecode execution
 #[derive(Error, Debug)]
 pub enum InterpreterError {
+    /// Stack underflow (popping from empty stack)
     #[error("Stack underflow")]
     StackUnderflow,
 
+    /// Stack overflow (exceeding maximum stack depth)
     #[error("Stack overflow")]
     StackOverflow,
 
+    /// Invalid local variable index
     #[error("Invalid local index: {0}")]
     InvalidLocalIndex(LocalIndex),
 
+    /// Invalid constant pool index
     #[error("Invalid constant index: {0}")]
     InvalidConstantIndex(u16),
 
+    /// Invalid function index
     #[error("Invalid function index: {0}")]
     InvalidFunctionIndex(FunctionIndex),
 
+    /// Type mismatch between expected and actual types
     #[error("Type mismatch: expected {expected}, got {got}")]
-    TypeMismatch { expected: String, got: String },
+    TypeMismatch {
+        /// Expected type name
+        expected: String,
+        /// Actual type name
+        got: String,
+    },
 
+    /// Division by zero error
     #[error("Division by zero")]
     DivisionByZero,
 
+    /// Execution ran out of fuel
     #[error("Out of fuel")]
     OutOfFuel,
 
+    /// Transaction aborted with error code
     #[error("Execution aborted with code {0}")]
     Aborted(u64),
 
+    /// Invalid branch target
     #[error("Invalid branch target: {0}")]
     InvalidBranchTarget(i32),
 
+    /// Generic runtime error
     #[error("Runtime error: {0}")]
     RuntimeError(String),
 }
@@ -134,16 +149,21 @@ impl Value {
     }
 }
 
-/// Call frame for function execution
+/// Call frame for function execution.
+///
+/// Represents a single function call on the call stack.
 #[derive(Debug, Clone)]
 struct CallFrame {
     /// Function being executed
+    #[allow(dead_code)]
     function_idx: FunctionIndex,
     /// Program counter
+    #[allow(dead_code)]
     pc: usize,
     /// Local variables
     locals: Vec<Value>,
     /// Base pointer for stack (where this frame's values start)
+    #[allow(dead_code)]
     base_pointer: usize,
 }
 
@@ -182,16 +202,23 @@ impl ExecutionStack {
             .ok_or(InterpreterError::StackUnderflow)
     }
 
+    #[allow(dead_code)]
     fn len(&self) -> usize {
         self.values.len()
     }
 
+    #[allow(dead_code)]
     fn is_empty(&self) -> bool {
         self.values.is_empty()
     }
 }
 
-/// Bytecode interpreter
+/// Bytecode interpreter for executing Quantum bytecode.
+///
+/// Provides stack-based execution with:
+/// - Fuel metering
+/// - Call stack management
+/// - Runtime environment
 pub struct Interpreter {
     /// Execution stack
     stack: ExecutionStack,
@@ -202,6 +229,7 @@ pub struct Interpreter {
     /// Fuel remaining
     fuel_remaining: u64,
     /// Runtime environment
+    #[allow(dead_code)]
     runtime: Runtime,
 }
 
@@ -311,7 +339,7 @@ impl Interpreter {
     fn execute_instruction(
         &mut self,
         instr: &Instruction,
-        function: &Function,
+        _function: &Function,
     ) -> InterpreterResult<()> {
         match instr {
             // Stack operations

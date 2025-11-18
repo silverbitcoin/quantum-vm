@@ -3,7 +3,7 @@
 //! Native function implementations for cryptographic operations
 //! and system functions.
 
-use silver_core::{ObjectID, SilverAddress};
+use silver_core::SilverAddress;
 use silver_crypto::{hash_512, derive_address as crypto_derive_address};
 
 /// Native function registry

@@ -12,10 +12,19 @@
 #![warn(missing_docs, rust_2018_idioms)]
 #![forbid(unsafe_code)]
 
+/// Bytecode format and instruction definitions
 pub mod bytecode;
+
+/// Bytecode verification and validation
 pub mod verifier;
+
+/// Bytecode interpreter and execution engine
 pub mod interpreter;
+
+/// Runtime environment and state management
 pub mod runtime;
+
+/// Native function implementations
 pub mod native;
 
 pub use bytecode::{Instruction, Bytecode, Module};

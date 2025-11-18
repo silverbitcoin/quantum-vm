@@ -8,41 +8,81 @@
 //! - Control flow validation
 
 use crate::bytecode::{
-    Bytecode, Function, FunctionSignature, Instruction, LocalIndex, Module, TypeTag,
+    Bytecode, Function, Instruction, LocalIndex, Module, TypeTag,
 };
-use std::collections::{HashMap, HashSet};
+use std::collections::HashSet;
 use thiserror::Error;
 
-/// Verifier error types
+/// Verifier error types for bytecode validation
 #[derive(Error, Debug, Clone, PartialEq, Eq)]
 pub enum VerifierError {
+    /// Type mismatch between expected and actual types
     #[error("Type mismatch: expected {expected}, got {got}")]
-    TypeMismatch { expected: String, got: String },
+    TypeMismatch {
+        /// Expected type name
+        expected: String,
+        /// Actual type name
+        got: String,
+    },
 
+    /// Stack underflow during execution
     #[error("Stack underflow at PC {pc}")]
-    StackUnderflow { pc: usize },
+    StackUnderflow {
+        /// Program counter where underflow occurred
+        pc: usize,
+    },
 
+    /// Stack overflow during execution
     #[error("Stack overflow at PC {pc}")]
-    StackOverflow { pc: usize },
+    StackOverflow {
+        /// Program counter where overflow occurred
+        pc: usize,
+    },
 
+    /// Invalid local variable index
     #[error("Invalid local index {index} at PC {pc}")]
-    InvalidLocalIndex { index: LocalIndex, pc: usize },
+    InvalidLocalIndex {
+        /// Invalid local variable index
+        index: LocalIndex,
+        /// Program counter where error occurred
+        pc: usize,
+    },
 
+    /// Invalid branch target
     #[error("Invalid branch target {target} at PC {pc}")]
-    InvalidBranchTarget { target: i32, pc: usize },
+    InvalidBranchTarget {
+        /// Invalid branch target offset
+        target: i32,
+        /// Program counter where error occurred
+        pc: usize,
+    },
 
+    /// Resource safety violation (linear type violation)
     #[error("Resource safety violation: {message}")]
-    ResourceSafetyViolation { message: String },
+    ResourceSafetyViolation {
+        /// Detailed error message
+        message: String,
+    },
 
+    /// Borrow checking error
     #[error("Borrow checking error: {message}")]
-    BorrowCheckingError { message: String },
+    BorrowCheckingError {
+        /// Detailed error message
+        message: String,
+    },
 
+    /// Unreachable code detected
     #[error("Unreachable code at PC {pc}")]
-    UnreachableCode { pc: usize },
+    UnreachableCode {
+        /// Program counter of unreachable code
+        pc: usize,
+    },
 
+    /// Missing return statement at end of function
     #[error("Missing return at end of function")]
     MissingReturn,
 
+    /// Invalid function signature
     #[error("Invalid function signature")]
     InvalidSignature,
 }
@@ -100,10 +140,14 @@ impl AbstractStack {
             .ok_or(VerifierError::StackUnderflow { pc: 0 })
     }
 
+    /// Get the number of types on the stack
+    #[allow(dead_code)]
     fn len(&self) -> usize {
         self.types.len()
     }
 
+    /// Check if the stack is empty
+    #[allow(dead_code)]
     fn is_empty(&self) -> bool {
         self.types.is_empty()
     }
@@ -128,6 +172,7 @@ struct BorrowChecker {
     /// State of each local variable
     locals: Vec<LocalState>,
     /// Active references (for tracking lifetime)
+    #[allow(dead_code)]
     active_refs: HashSet<usize>,
 }
 
@@ -298,7 +343,7 @@ impl<'a> FunctionVerifier<'a> {
         Ok(())
     }
 
-    fn verify_instruction(&mut self, pc: usize, instr: &Instruction) -> VerifierResult<()> {
+    fn verify_instruction(&mut self, _pc: usize, instr: &Instruction) -> VerifierResult<()> {
         match instr {
             // Stack operations
             Instruction::Pop => {

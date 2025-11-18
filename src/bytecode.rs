@@ -356,12 +356,17 @@ pub enum Instruction {
     },
     
     // ==================== Type Operations ====================
-    /// Cast value to different type (checked)
+    /// Cast value to U8 type (checked, with overflow protection)
     CastU8,
+    /// Cast value to U16 type (checked, with overflow protection)
     CastU16,
+    /// Cast value to U32 type (checked, with overflow protection)
     CastU32,
+    /// Cast value to U64 type (checked, with overflow protection)
     CastU64,
+    /// Cast value to U128 type (checked, with overflow protection)
     CastU128,
+    /// Cast value to U256 type (checked, with overflow protection)
     CastU256,
     
     // ==================== Advanced Operations ====================
