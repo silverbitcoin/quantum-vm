@@ -28,10 +28,10 @@ pub mod runtime;
 pub mod native;
 
 pub use bytecode::{
-    Instruction, Bytecode, Module, Function, StructDef, Constant, TypeTag, 
-    FunctionSignature, BytecodeVersion
+    Bytecode, BytecodeVersion, Constant, Function, FunctionSignature, Instruction, Module,
+    StructDef, TypeTag,
 };
-pub use verifier::{BytecodeVerifier, VerifierError, VerifierResult};
 pub use interpreter::{Interpreter, InterpreterError, InterpreterResult, Value};
-pub use runtime::{Runtime, TransactionContext, Event, AccessMode};
 pub use native::NativeFunctions;
+pub use runtime::{AccessMode, Event, Runtime, TransactionContext};
+pub use verifier::{BytecodeVerifier, VerifierError, VerifierResult};

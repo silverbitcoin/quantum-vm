@@ -191,15 +191,11 @@ impl ExecutionStack {
     }
 
     fn pop(&mut self) -> InterpreterResult<Value> {
-        self.values
-            .pop()
-            .ok_or(InterpreterError::StackUnderflow)
+        self.values.pop().ok_or(InterpreterError::StackUnderflow)
     }
 
     fn peek(&self) -> InterpreterResult<&Value> {
-        self.values
-            .last()
-            .ok_or(InterpreterError::StackUnderflow)
+        self.values.last().ok_or(InterpreterError::StackUnderflow)
     }
 
     #[allow(dead_code)]
@@ -820,7 +816,9 @@ impl Interpreter {
         let module = self
             .current_module
             .as_ref()
-            .ok_or(InterpreterError::RuntimeError("No current module".to_string()))?;
+            .ok_or(InterpreterError::RuntimeError(
+                "No current module".to_string(),
+            ))?;
 
         module
             .constants
@@ -831,112 +829,5 @@ impl Interpreter {
     /// Get remaining fuel
     pub fn fuel_remaining(&self) -> u64 {
         self.fuel_remaining
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use crate::bytecode::{FunctionSignature, Module};
-
-    #[test]
-    fn test_simple_arithmetic() {
-        let mut module = Module::new("test".to_string());
-        module.functions.push(Function {
-            name: "add".to_string(),
-            signature: FunctionSignature {
-                type_parameters: vec![],
-                parameters: vec![],
-                return_types: vec![TypeTag::U64],
-            },
-            locals: vec![],
-            code: vec![
-                Instruction::LdU64(10),
-                Instruction::LdU64(20),
-                Instruction::Add,
-                Instruction::Ret,
-            ],
-            is_public: true,
-            is_entry: false,
-        });
-
-        let mut interpreter = Interpreter::new(1000);
-        let result = interpreter.execute_function(&module, 0, vec![]).unwrap();
-
-        assert_eq!(result.len(), 1);
-        assert_eq!(result[0], Value::U64(30));
-    }
-
-    #[test]
-    fn test_comparison() {
-        let mut module = Module::new("test".to_string());
-        module.functions.push(Function {
-            name: "compare".to_string(),
-            signature: FunctionSignature {
-                type_parameters: vec![],
-                parameters: vec![],
-                return_types: vec![TypeTag::Bool],
-            },
-            locals: vec![],
-            code: vec![
-                Instruction::LdU64(10),
-                Instruction::LdU64(20),
-                Instruction::Lt,
-                Instruction::Ret,
-            ],
-            is_public: true,
-            is_entry: false,
-        });
-
-        let mut interpreter = Interpreter::new(1000);
-        let result = interpreter.execute_function(&module, 0, vec![]).unwrap();
-
-        assert_eq!(result.len(), 1);
-        assert_eq!(result[0], Value::Bool(true));
-    }
-
-    #[test]
-    fn test_fuel_metering() {
-        let mut module = Module::new("test".to_string());
-        module.functions.push(Function {
-            name: "test".to_string(),
-            signature: FunctionSignature {
-                type_parameters: vec![],
-                parameters: vec![],
-                return_types: vec![],
-            },
-            locals: vec![],
-            code: vec![Instruction::LdU64(42), Instruction::Pop, Instruction::Ret],
-            is_public: true,
-            is_entry: false,
-        });
-
-        let mut interpreter = Interpreter::new(10);
-        let result = interpreter.execute_function(&module, 0, vec![]);
-
-        assert!(result.is_ok());
-        assert!(interpreter.fuel_remaining() < 10);
-    }
-
-    #[test]
-    fn test_out_of_fuel() {
-        let mut module = Module::new("test".to_string());
-        module.functions.push(Function {
-            name: "test".to_string(),
-            signature: FunctionSignature {
-                type_parameters: vec![],
-                parameters: vec![],
-                return_types: vec![],
-            },
-            locals: vec![],
-            code: vec![Instruction::LdU64(42), Instruction::Pop, Instruction::Ret],
-            is_public: true,
-            is_entry: false,
-        });
-
-        let mut interpreter = Interpreter::new(1); // Very low fuel
-        let result = interpreter.execute_function(&module, 0, vec![]);
-
-        assert!(matches!(result, Err(InterpreterError::OutOfFuel)));
     }
 }

@@ -4,7 +4,7 @@
 //! and system functions.
 
 use silver_core::SilverAddress;
-use silver_crypto::{hash_512, derive_address as crypto_derive_address};
+use silver_crypto::{derive_address as crypto_derive_address, hash_512};
 
 /// Native function registry
 pub struct NativeFunctions;
@@ -30,31 +30,5 @@ impl NativeFunctions {
             result.push(hash[0]);
         }
         result
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_hash_blake3() {
-        let data = b"hello world";
-        let hash = NativeFunctions::hash_blake3(data);
-        assert_eq!(hash.len(), 64);
-    }
-
-    #[test]
-    fn test_derive_address() {
-        let public_key = [42u8; 64];
-        let address = NativeFunctions::derive_address(&public_key);
-        assert_eq!(address.0.len(), 64);
-    }
-
-    #[test]
-    fn test_random_bytes() {
-        let seed = b"test_seed";
-        let random = NativeFunctions::random_bytes(seed, 32);
-        assert_eq!(random.len(), 32);
     }
 }

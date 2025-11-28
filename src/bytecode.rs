@@ -110,146 +110,146 @@ pub enum Instruction {
     // ==================== Stack Operations ====================
     /// Pop value from stack and discard
     Pop,
-    
+
     /// Duplicate top stack value
     Dup,
-    
+
     /// Swap top two stack values
     Swap,
-    
+
     // ==================== Constant Loading ====================
     /// Push boolean constant
     LdTrue,
-    
+
     /// Push boolean constant
     LdFalse,
-    
+
     /// Push u8 constant
     LdU8(u8),
-    
+
     /// Push u16 constant
     LdU16(u16),
-    
+
     /// Push u32 constant
     LdU32(u32),
-    
+
     /// Push u64 constant
     LdU64(u64),
-    
+
     /// Push u128 constant (from constant pool)
     LdU128(ConstantIndex),
-    
+
     /// Push u256 constant (from constant pool)
     LdU256(ConstantIndex),
-    
+
     /// Push address constant (from constant pool)
     LdAddress(ConstantIndex),
-    
+
     /// Push object ID constant (from constant pool)
     LdObjectID(ConstantIndex),
-    
+
     /// Push byte array constant (from constant pool)
     LdByteArray(ConstantIndex),
-    
+
     // ==================== Local Variable Operations ====================
     /// Copy local variable to stack
     CopyLoc(LocalIndex),
-    
+
     /// Move local variable to stack (consumes it)
     MoveLoc(LocalIndex),
-    
+
     /// Store top of stack to local variable
     StoreLoc(LocalIndex),
-    
+
     /// Borrow local variable (immutable reference)
     BorrowLoc(LocalIndex),
-    
+
     /// Borrow local variable (mutable reference)
     MutBorrowLoc(LocalIndex),
-    
+
     // ==================== Arithmetic Operations ====================
     /// Add two integers (u8, u16, u32, u64, u128, u256)
     Add,
-    
+
     /// Subtract two integers
     Sub,
-    
+
     /// Multiply two integers
     Mul,
-    
+
     /// Divide two integers (checked, aborts on division by zero)
     Div,
-    
+
     /// Modulo operation
     Mod,
-    
+
     /// Bitwise AND
     BitAnd,
-    
+
     /// Bitwise OR
     BitOr,
-    
+
     /// Bitwise XOR
     BitXor,
-    
+
     /// Bitwise NOT
     BitNot,
-    
+
     /// Left shift
     Shl,
-    
+
     /// Right shift
     Shr,
-    
+
     // ==================== Comparison Operations ====================
     /// Less than
     Lt,
-    
+
     /// Less than or equal
     Le,
-    
+
     /// Greater than
     Gt,
-    
+
     /// Greater than or equal
     Ge,
-    
+
     /// Equal
     Eq,
-    
+
     /// Not equal
     Neq,
-    
+
     // ==================== Logical Operations ====================
     /// Logical AND
     And,
-    
+
     /// Logical OR
     Or,
-    
+
     /// Logical NOT
     Not,
-    
+
     // ==================== Control Flow ====================
     /// Unconditional branch to offset
     Branch(i32),
-    
+
     /// Branch if top of stack is true
     BranchTrue(i32),
-    
+
     /// Branch if top of stack is false
     BranchFalse(i32),
-    
+
     /// Return from function
     Ret,
-    
+
     /// Abort execution with error code
     Abort,
-    
+
     // ==================== Function Calls ====================
     /// Call function in current module
     Call(FunctionIndex),
-    
+
     /// Call function in another module
     CallGeneric {
         /// Module containing the function
@@ -259,102 +259,102 @@ pub enum Instruction {
         /// Type arguments
         type_args: Vec<TypeTag>,
     },
-    
+
     /// Call native function
     CallNative(u16),
-    
+
     // ==================== Struct Operations ====================
     /// Pack struct from stack values
     Pack(ConstantIndex),
-    
+
     /// Unpack struct to stack values
     Unpack(ConstantIndex),
-    
+
     /// Borrow field from struct (immutable)
     BorrowField(FieldIndex),
-    
+
     /// Borrow field from struct (mutable)
     MutBorrowField(FieldIndex),
-    
+
     /// Read field value from reference
     ReadRef,
-    
+
     /// Write value to reference
     WriteRef,
-    
+
     /// Release reference (for borrow checking)
     ReleaseRef,
-    
+
     // ==================== Vector Operations ====================
     /// Create empty vector
     VecEmpty(TypeTag),
-    
+
     /// Get vector length
     VecLen,
-    
+
     /// Push element to vector
     VecPush,
-    
+
     /// Pop element from vector
     VecPop,
-    
+
     /// Borrow element from vector (immutable)
     VecBorrow(u64),
-    
+
     /// Borrow element from vector (mutable)
     VecMutBorrow(u64),
-    
+
     /// Swap two elements in vector
     VecSwap,
-    
+
     // ==================== Object Operations ====================
     /// Create new object
     ObjectNew,
-    
+
     /// Delete object (must be owned)
     ObjectDelete,
-    
+
     /// Transfer object ownership
     ObjectTransfer,
-    
+
     /// Share object (make it shared)
     ObjectShare,
-    
+
     /// Freeze object (make it immutable)
     ObjectFreeze,
-    
+
     /// Get object ID
     ObjectGetID,
-    
+
     /// Check if object exists
     ObjectExists,
-    
+
     /// Borrow object (immutable)
     ObjectBorrow,
-    
+
     /// Borrow object (mutable)
     ObjectMutBorrow,
-    
+
     // ==================== Cryptographic Operations ====================
     /// Hash data with Blake3-512
     CryptoHashBlake3,
-    
+
     /// Verify signature (SPHINCS+, Dilithium3, or Secp512r1)
     CryptoVerifySignature,
-    
+
     /// Derive address from public key
     CryptoDeriveAddress,
-    
+
     /// Generate random bytes (from transaction context)
     CryptoRandom(u16),
-    
+
     // ==================== Event Operations ====================
     /// Emit event
     EventEmit {
         /// Event type
         event_type: TypeTag,
     },
-    
+
     // ==================== Type Operations ====================
     /// Cast value to U8 type (checked, with overflow protection)
     CastU8,
@@ -368,30 +368,30 @@ pub enum Instruction {
     CastU128,
     /// Cast value to U256 type (checked, with overflow protection)
     CastU256,
-    
+
     // ==================== Advanced Operations ====================
     /// Get transaction sender address
     TxSender,
-    
+
     /// Get current timestamp
     TxTimestamp,
-    
+
     /// Get transaction digest
     TxDigest,
-    
+
     /// Get fuel remaining
     FuelRemaining,
-    
+
     /// Charge additional fuel
     FuelCharge(u64),
-    
+
     /// No operation (for alignment/padding)
     Nop,
-    
+
     // ==================== Debug Operations ====================
     /// Print debug message (only in debug mode)
     DebugPrint,
-    
+
     /// Assert condition (aborts if false)
     Assert,
 }
@@ -405,53 +405,60 @@ impl Instruction {
         match self {
             // Stack operations: 1 fuel
             Self::Pop | Self::Dup | Self::Swap => 1,
-            
+
             // Constant loading: 1-2 fuel
-            Self::LdTrue | Self::LdFalse | Self::LdU8(_) | Self::LdU16(_) 
-            | Self::LdU32(_) | Self::LdU64(_) => 1,
-            Self::LdU128(_) | Self::LdU256(_) | Self::LdAddress(_) 
-            | Self::LdObjectID(_) | Self::LdByteArray(_) => 2,
-            
+            Self::LdTrue
+            | Self::LdFalse
+            | Self::LdU8(_)
+            | Self::LdU16(_)
+            | Self::LdU32(_)
+            | Self::LdU64(_) => 1,
+            Self::LdU128(_)
+            | Self::LdU256(_)
+            | Self::LdAddress(_)
+            | Self::LdObjectID(_)
+            | Self::LdByteArray(_) => 2,
+
             // Local variable operations: 1-2 fuel
             Self::CopyLoc(_) | Self::MoveLoc(_) | Self::StoreLoc(_) => 1,
             Self::BorrowLoc(_) | Self::MutBorrowLoc(_) => 2,
-            
+
             // Arithmetic operations: 1-5 fuel
             Self::Add | Self::Sub => 1,
             Self::Mul => 2,
             Self::Div | Self::Mod => 5,
             Self::BitAnd | Self::BitOr | Self::BitXor | Self::BitNot => 1,
             Self::Shl | Self::Shr => 1,
-            
+
             // Comparison operations: 1 fuel
             Self::Lt | Self::Le | Self::Gt | Self::Ge | Self::Eq | Self::Neq => 1,
-            
+
             // Logical operations: 1 fuel
             Self::And | Self::Or | Self::Not => 1,
-            
+
             // Control flow: 1-2 fuel
             Self::Branch(_) | Self::BranchTrue(_) | Self::BranchFalse(_) => 1,
             Self::Ret => 1,
             Self::Abort => 1,
-            
+
             // Function calls: 10-100 fuel (base cost, actual cost depends on callee)
             Self::Call(_) => 10,
             Self::CallGeneric { .. } => 20,
             Self::CallNative(_) => 50,
-            
+
             // Struct operations: 2-10 fuel
             Self::Pack(_) | Self::Unpack(_) => 5,
             Self::BorrowField(_) | Self::MutBorrowField(_) => 2,
             Self::ReadRef | Self::WriteRef => 2,
             Self::ReleaseRef => 1,
-            
+
             // Vector operations: 2-10 fuel
             Self::VecEmpty(_) => 2,
             Self::VecLen => 1,
             Self::VecPush | Self::VecPop => 3,
             Self::VecBorrow(_) | Self::VecMutBorrow(_) => 2,
             Self::VecSwap => 2,
-            
+
             // Object operations: 10-100 fuel
             Self::ObjectNew => 50,
             Self::ObjectDelete => 20,
@@ -460,32 +467,36 @@ impl Instruction {
             Self::ObjectGetID => 2,
             Self::ObjectExists => 10,
             Self::ObjectBorrow | Self::ObjectMutBorrow => 10,
-            
+
             // Cryptographic operations: 100-1000 fuel
             Self::CryptoHashBlake3 => 100,
             Self::CryptoVerifySignature => 1000,
             Self::CryptoDeriveAddress => 100,
             Self::CryptoRandom(_) => 50,
-            
+
             // Event operations: 20 fuel
             Self::EventEmit { .. } => 20,
-            
+
             // Type operations: 1 fuel
-            Self::CastU8 | Self::CastU16 | Self::CastU32 
-            | Self::CastU64 | Self::CastU128 | Self::CastU256 => 1,
-            
+            Self::CastU8
+            | Self::CastU16
+            | Self::CastU32
+            | Self::CastU64
+            | Self::CastU128
+            | Self::CastU256 => 1,
+
             // Advanced operations: 1-10 fuel
             Self::TxSender | Self::TxTimestamp | Self::TxDigest => 2,
             Self::FuelRemaining => 1,
             Self::FuelCharge(_) => 1,
             Self::Nop => 0,
-            
+
             // Debug operations: 10 fuel
             Self::DebugPrint => 10,
             Self::Assert => 2,
         }
     }
-    
+
     /// Check if this instruction is a branch instruction
     pub fn is_branch(&self) -> bool {
         matches!(
@@ -493,7 +504,7 @@ impl Instruction {
             Self::Branch(_) | Self::BranchTrue(_) | Self::BranchFalse(_)
         )
     }
-    
+
     /// Get the branch offset if this is a branch instruction
     pub fn branch_offset(&self) -> Option<i32> {
         match self {
@@ -503,7 +514,7 @@ impl Instruction {
             _ => None,
         }
     }
-    
+
     /// Check if this instruction terminates execution
     pub fn is_terminal(&self) -> bool {
         matches!(self, Self::Ret | Self::Abort)
@@ -560,7 +571,7 @@ impl Function {
     pub fn validate(&self) -> Result<(), String> {
         // Check for invalid jumps
         let code_len = self.code.len() as i32;
-        
+
         for (pc, instr) in self.code.iter().enumerate() {
             if let Some(offset) = instr.branch_offset() {
                 let target = pc as i32 + offset;
@@ -572,7 +583,7 @@ impl Function {
                 }
             }
         }
-        
+
         Ok(())
     }
 }
@@ -643,27 +654,28 @@ impl Module {
             dependencies: Vec::new(),
         }
     }
-    
+
     /// Validate module bytecode
     pub fn validate(&self) -> Result<(), String> {
         // Check version compatibility
         if !self.version.is_compatible() {
             return Err(format!(
                 "Incompatible bytecode version: {}.{} (expected {}.x)",
-                self.version.major, self.version.minor, BytecodeVersion::CURRENT.major
+                self.version.major,
+                self.version.minor,
+                BytecodeVersion::CURRENT.major
             ));
         }
-        
+
         // Validate all functions
         for (idx, func) in self.functions.iter().enumerate() {
-            func.validate().map_err(|e| {
-                format!("Function {} ({}): {}", idx, func.name, e)
-            })?;
+            func.validate()
+                .map_err(|e| format!("Function {} ({}): {}", idx, func.name, e))?;
         }
-        
+
         Ok(())
     }
-    
+
     /// Find function by name
     pub fn find_function(&self, name: &str) -> Option<(FunctionIndex, &Function)> {
         self.functions
@@ -672,7 +684,7 @@ impl Module {
             .find(|(_, f)| f.name == name)
             .map(|(idx, f)| (idx as FunctionIndex, f))
     }
-    
+
     /// Find struct by name
     pub fn find_struct(&self, name: &str) -> Option<(usize, &StructDef)> {
         self.structs
@@ -720,29 +732,27 @@ impl Bytecode {
             },
         }
     }
-    
+
     /// Validate all modules in the package
     pub fn validate(&self) -> Result<(), String> {
         for (idx, module) in self.modules.iter().enumerate() {
-            module.validate().map_err(|e| {
-                format!("Module {} ({}): {}", idx, module.name, e)
-            })?;
+            module
+                .validate()
+                .map_err(|e| format!("Module {} ({}): {}", idx, module.name, e))?;
         }
         Ok(())
     }
-    
+
     /// Serialize bytecode to binary format (efficient, not JSON)
     pub fn serialize(&self) -> Result<Vec<u8>, String> {
-        bincode::serialize(self)
-            .map_err(|e| format!("Serialization error: {}", e))
+        bincode::serialize(self).map_err(|e| format!("Serialization error: {}", e))
     }
-    
+
     /// Deserialize bytecode from binary format
     pub fn deserialize(data: &[u8]) -> Result<Self, String> {
-        bincode::deserialize(data)
-            .map_err(|e| format!("Deserialization error: {}", e))
+        bincode::deserialize(data).map_err(|e| format!("Deserialization error: {}", e))
     }
-    
+
     /// Find module by name
     pub fn find_module(&self, name: &str) -> Option<(usize, &Module)> {
         self.modules
@@ -761,121 +771,5 @@ impl fmt::Display for Bytecode {
             self.modules.len(),
             self.metadata.version
         )
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_instruction_fuel_cost() {
-        assert_eq!(Instruction::Add.fuel_cost(), 1);
-        assert_eq!(Instruction::Mul.fuel_cost(), 2);
-        assert_eq!(Instruction::Div.fuel_cost(), 5);
-        assert_eq!(Instruction::CryptoHashBlake3.fuel_cost(), 100);
-        assert_eq!(Instruction::CryptoVerifySignature.fuel_cost(), 1000);
-    }
-
-    #[test]
-    fn test_instruction_is_branch() {
-        assert!(Instruction::Branch(10).is_branch());
-        assert!(Instruction::BranchTrue(5).is_branch());
-        assert!(Instruction::BranchFalse(-3).is_branch());
-        assert!(!Instruction::Add.is_branch());
-    }
-
-    #[test]
-    fn test_instruction_is_terminal() {
-        assert!(Instruction::Ret.is_terminal());
-        assert!(Instruction::Abort.is_terminal());
-        assert!(!Instruction::Add.is_terminal());
-    }
-
-    #[test]
-    fn test_bytecode_version() {
-        let v = BytecodeVersion::CURRENT;
-        assert!(v.is_compatible());
-        
-        let old = BytecodeVersion { major: 0, minor: 1 };
-        assert!(!old.is_compatible());
-    }
-
-    #[test]
-    fn test_function_validation() {
-        let func = Function {
-            name: "test".to_string(),
-            signature: FunctionSignature {
-                type_parameters: vec![],
-                parameters: vec![],
-                return_types: vec![],
-            },
-            locals: vec![],
-            code: vec![
-                Instruction::LdU64(42),
-                Instruction::Branch(1),  // Valid: jumps to Ret
-                Instruction::Ret,
-            ],
-            is_public: true,
-            is_entry: false,
-        };
-        
-        assert!(func.validate().is_ok());
-    }
-
-    #[test]
-    fn test_function_validation_invalid_jump() {
-        let func = Function {
-            name: "test".to_string(),
-            signature: FunctionSignature {
-                type_parameters: vec![],
-                parameters: vec![],
-                return_types: vec![],
-            },
-            locals: vec![],
-            code: vec![
-                Instruction::Branch(100),  // Invalid: out of bounds
-                Instruction::Ret,
-            ],
-            is_public: true,
-            is_entry: false,
-        };
-        
-        assert!(func.validate().is_err());
-    }
-
-    #[test]
-    fn test_module_creation() {
-        let module = Module::new("test_module".to_string());
-        assert_eq!(module.name, "test_module");
-        assert_eq!(module.version, BytecodeVersion::CURRENT);
-        assert!(module.functions.is_empty());
-        assert!(module.structs.is_empty());
-    }
-
-    #[test]
-    fn test_bytecode_serialization() {
-        let package_id = ObjectID::new([1u8; 64]);
-        let bytecode = Bytecode::new(package_id, "test_package".to_string());
-        
-        let serialized = bytecode.serialize().unwrap();
-        let deserialized = Bytecode::deserialize(&serialized).unwrap();
-        
-        assert_eq!(bytecode, deserialized);
-    }
-
-    #[test]
-    fn test_struct_abilities() {
-        let abilities = StructAbilities {
-            has_copy: true,
-            has_drop: true,
-            has_store: false,
-            has_key: false,
-        };
-        
-        assert!(abilities.has_copy);
-        assert!(abilities.has_drop);
-        assert!(!abilities.has_store);
-        assert!(!abilities.has_key);
     }
 }

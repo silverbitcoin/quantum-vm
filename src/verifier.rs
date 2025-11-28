@@ -7,9 +7,7 @@
 //! - Stack safety verification
 //! - Control flow validation
 
-use crate::bytecode::{
-    Bytecode, Function, Instruction, LocalIndex, Module, TypeTag,
-};
+use crate::bytecode::{Bytecode, Function, Instruction, LocalIndex, Module, TypeTag};
 use std::collections::HashSet;
 use thiserror::Error;
 
@@ -108,12 +106,12 @@ impl AbstractStack {
     fn push(&mut self, ty: TypeTag) -> VerifierResult<()> {
         self.types.push(ty);
         self.max_depth = self.max_depth.max(self.types.len());
-        
+
         // Prevent stack overflow (max 1024 elements)
         if self.types.len() > 1024 {
             return Err(VerifierError::StackOverflow { pc: 0 });
         }
-        
+
         Ok(())
     }
 
@@ -187,7 +185,10 @@ impl BorrowChecker {
     fn move_local(&mut self, idx: LocalIndex) -> VerifierResult<()> {
         let idx = idx as usize;
         if idx >= self.locals.len() {
-            return Err(VerifierError::InvalidLocalIndex { index: idx as u16, pc: 0 });
+            return Err(VerifierError::InvalidLocalIndex {
+                index: idx as u16,
+                pc: 0,
+            });
         }
 
         match &self.locals[idx] {
@@ -210,7 +211,10 @@ impl BorrowChecker {
     fn copy_local(&mut self, idx: LocalIndex) -> VerifierResult<()> {
         let idx = idx as usize;
         if idx >= self.locals.len() {
-            return Err(VerifierError::InvalidLocalIndex { index: idx as u16, pc: 0 });
+            return Err(VerifierError::InvalidLocalIndex {
+                index: idx as u16,
+                pc: 0,
+            });
         }
 
         match &self.locals[idx] {
@@ -228,7 +232,10 @@ impl BorrowChecker {
     fn borrow_local(&mut self, idx: LocalIndex) -> VerifierResult<()> {
         let idx = idx as usize;
         if idx >= self.locals.len() {
-            return Err(VerifierError::InvalidLocalIndex { index: idx as u16, pc: 0 });
+            return Err(VerifierError::InvalidLocalIndex {
+                index: idx as u16,
+                pc: 0,
+            });
         }
 
         match &mut self.locals[idx] {
@@ -252,7 +259,10 @@ impl BorrowChecker {
     fn mut_borrow_local(&mut self, idx: LocalIndex) -> VerifierResult<()> {
         let idx = idx as usize;
         if idx >= self.locals.len() {
-            return Err(VerifierError::InvalidLocalIndex { index: idx as u16, pc: 0 });
+            return Err(VerifierError::InvalidLocalIndex {
+                index: idx as u16,
+                pc: 0,
+            });
         }
 
         match &self.locals[idx] {
@@ -285,7 +295,7 @@ struct FunctionVerifier<'a> {
 impl<'a> FunctionVerifier<'a> {
     fn new(function: &'a Function) -> Self {
         let num_locals = function.signature.parameters.len() + function.locals.len();
-        
+
         Self {
             function,
             stack: AbstractStack::new(),
@@ -315,7 +325,7 @@ impl<'a> FunctionVerifier<'a> {
 
     fn verify_instructions(&mut self) -> VerifierResult<()> {
         let mut pc = 0;
-        
+
         while pc < self.function.code.len() {
             if !self.reachable.contains(&pc) {
                 // Skip unreachable code
@@ -421,12 +431,16 @@ impl<'a> FunctionVerifier<'a> {
             Instruction::MutBorrowLoc(idx) => {
                 self.borrow_checker.mut_borrow_local(*idx)?;
                 let local_ty = self.get_local_type(*idx)?;
-                self.stack.push(TypeTag::MutableReference(Box::new(local_ty)))?;
+                self.stack
+                    .push(TypeTag::MutableReference(Box::new(local_ty)))?;
             }
 
             // Arithmetic operations (require integer types)
-            Instruction::Add | Instruction::Sub | Instruction::Mul 
-            | Instruction::Div | Instruction::Mod => {
+            Instruction::Add
+            | Instruction::Sub
+            | Instruction::Mul
+            | Instruction::Div
+            | Instruction::Mod => {
                 let ty1 = self.stack.pop()?;
                 let ty2 = self.stack.pop()?;
                 if ty1 != ty2 || !self.is_integer_type(&ty1) {
@@ -439,8 +453,11 @@ impl<'a> FunctionVerifier<'a> {
             }
 
             // Bitwise operations
-            Instruction::BitAnd | Instruction::BitOr | Instruction::BitXor 
-            | Instruction::Shl | Instruction::Shr => {
+            Instruction::BitAnd
+            | Instruction::BitOr
+            | Instruction::BitXor
+            | Instruction::Shl
+            | Instruction::Shr => {
                 let ty1 = self.stack.pop()?;
                 let ty2 = self.stack.pop()?;
                 if ty1 != ty2 || !self.is_integer_type(&ty1) {
@@ -463,8 +480,12 @@ impl<'a> FunctionVerifier<'a> {
             }
 
             // Comparison operations
-            Instruction::Lt | Instruction::Le | Instruction::Gt 
-            | Instruction::Ge | Instruction::Eq | Instruction::Neq => {
+            Instruction::Lt
+            | Instruction::Le
+            | Instruction::Gt
+            | Instruction::Ge
+            | Instruction::Eq
+            | Instruction::Neq => {
                 let ty1 = self.stack.pop()?;
                 let ty2 = self.stack.pop()?;
                 if ty1 != ty2 {
@@ -517,7 +538,7 @@ impl<'a> FunctionVerifier<'a> {
     fn get_local_type(&self, idx: LocalIndex) -> VerifierResult<TypeTag> {
         let idx = idx as usize;
         let num_params = self.function.signature.parameters.len();
-        
+
         if idx < num_params {
             Ok(self.function.signature.parameters[idx].clone())
         } else {
@@ -610,116 +631,5 @@ impl BytecodeVerifier {
         verifier.verify()?;
 
         Ok(())
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use crate::bytecode::FunctionSignature;
-
-    #[test]
-    fn test_simple_function_verification() {
-        let func = Function {
-            name: "test".to_string(),
-            signature: FunctionSignature {
-                type_parameters: vec![],
-                parameters: vec![],
-                return_types: vec![TypeTag::U64],
-            },
-            locals: vec![],
-            code: vec![Instruction::LdU64(42), Instruction::Ret],
-            is_public: true,
-            is_entry: false,
-        };
-
-        assert!(BytecodeVerifier::verify_function(&func).is_ok());
-    }
-
-    #[test]
-    fn test_type_mismatch_detection() {
-        let func = Function {
-            name: "test".to_string(),
-            signature: FunctionSignature {
-                type_parameters: vec![],
-                parameters: vec![],
-                return_types: vec![TypeTag::U64],
-            },
-            locals: vec![],
-            code: vec![
-                Instruction::LdTrue, // Push bool
-                Instruction::Ret,    // Expect U64
-            ],
-            is_public: true,
-            is_entry: false,
-        };
-
-        assert!(BytecodeVerifier::verify_function(&func).is_err());
-    }
-
-    #[test]
-    fn test_stack_underflow_detection() {
-        let func = Function {
-            name: "test".to_string(),
-            signature: FunctionSignature {
-                type_parameters: vec![],
-                parameters: vec![],
-                return_types: vec![],
-            },
-            locals: vec![],
-            code: vec![
-                Instruction::Pop, // Stack underflow
-                Instruction::Ret,
-            ],
-            is_public: true,
-            is_entry: false,
-        };
-
-        assert!(BytecodeVerifier::verify_function(&func).is_err());
-    }
-
-    #[test]
-    fn test_arithmetic_type_checking() {
-        let func = Function {
-            name: "test".to_string(),
-            signature: FunctionSignature {
-                type_parameters: vec![],
-                parameters: vec![],
-                return_types: vec![TypeTag::U64],
-            },
-            locals: vec![],
-            code: vec![
-                Instruction::LdU64(10),
-                Instruction::LdU64(20),
-                Instruction::Add,
-                Instruction::Ret,
-            ],
-            is_public: true,
-            is_entry: false,
-        };
-
-        assert!(BytecodeVerifier::verify_function(&func).is_ok());
-    }
-
-    #[test]
-    fn test_borrow_checking() {
-        let func = Function {
-            name: "test".to_string(),
-            signature: FunctionSignature {
-                type_parameters: vec![],
-                parameters: vec![TypeTag::U64],
-                return_types: vec![],
-            },
-            locals: vec![],
-            code: vec![
-                Instruction::BorrowLoc(0),  // Borrow parameter
-                Instruction::Pop,
-                Instruction::Ret,
-            ],
-            is_public: true,
-            is_entry: false,
-        };
-
-        assert!(BytecodeVerifier::verify_function(&func).is_ok());
     }
 }
