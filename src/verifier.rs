@@ -525,10 +525,279 @@ impl<'a> FunctionVerifier<'a> {
                 // Abort terminates execution
             }
 
-            // Other instructions (simplified for brevity)
-            _ => {
-                // For now, accept other instructions
-                // Full implementation would verify each instruction type
+            // Vector operations
+            Instruction::VecEmpty(_elem_ty) => {
+                self.stack.push(TypeTag::Vector(Box::new(TypeTag::U8)))?;
+            }
+            Instruction::VecLen => {
+                let vec_ty = self.stack.pop()?;
+                if !matches!(vec_ty, TypeTag::Vector(_)) {
+                    return Err(VerifierError::TypeMismatch {
+                        expected: "vector type".to_string(),
+                        got: format!("{:?}", vec_ty),
+                    });
+                }
+                self.stack.push(TypeTag::U64)?;
+            }
+            Instruction::VecPush => {
+                let elem = self.stack.pop()?;
+                let vec_ty = self.stack.pop()?;
+                if let TypeTag::Vector(elem_ty) = vec_ty {
+                    if *elem_ty != elem {
+                        return Err(VerifierError::TypeMismatch {
+                            expected: format!("{:?}", elem_ty),
+                            got: format!("{:?}", elem),
+                        });
+                    }
+                    self.stack.push(TypeTag::Vector(elem_ty))?;
+                } else {
+                    return Err(VerifierError::TypeMismatch {
+                        expected: "vector type".to_string(),
+                        got: format!("{:?}", vec_ty),
+                    });
+                }
+            }
+            Instruction::VecPop => {
+                let vec_ty = self.stack.pop()?;
+                if let TypeTag::Vector(elem_ty) = vec_ty {
+                    self.stack.push(*elem_ty)?;
+                } else {
+                    return Err(VerifierError::TypeMismatch {
+                        expected: "vector type".to_string(),
+                        got: format!("{:?}", vec_ty),
+                    });
+                }
+            }
+            Instruction::VecBorrow(_idx) => {
+                let index = self.stack.pop()?;
+                if !self.is_integer_type(&index) {
+                    return Err(VerifierError::TypeMismatch {
+                        expected: "integer type for index".to_string(),
+                        got: format!("{:?}", index),
+                    });
+                }
+                let vec_ty = self.stack.pop()?;
+                if let TypeTag::Vector(elem_ty) = vec_ty {
+                    self.stack.push(TypeTag::Reference(elem_ty))?;
+                } else {
+                    return Err(VerifierError::TypeMismatch {
+                        expected: "vector type".to_string(),
+                        got: format!("{:?}", vec_ty),
+                    });
+                }
+            }
+            Instruction::VecMutBorrow(_idx) => {
+                let index = self.stack.pop()?;
+                if !self.is_integer_type(&index) {
+                    return Err(VerifierError::TypeMismatch {
+                        expected: "integer type for index".to_string(),
+                        got: format!("{:?}", index),
+                    });
+                }
+                let vec_ty = self.stack.pop()?;
+                if let TypeTag::Vector(elem_ty) = vec_ty {
+                    self.stack.push(TypeTag::MutableReference(elem_ty))?;
+                } else {
+                    return Err(VerifierError::TypeMismatch {
+                        expected: "vector type".to_string(),
+                        got: format!("{:?}", vec_ty),
+                    });
+                }
+            }
+            Instruction::VecSwap => {
+                let _idx2 = self.stack.pop()?;
+                let _idx1 = self.stack.pop()?;
+                let vec_ty = self.stack.pop()?;
+                if !matches!(vec_ty, TypeTag::Vector(_)) {
+                    return Err(VerifierError::TypeMismatch {
+                        expected: "vector type".to_string(),
+                        got: format!("{:?}", vec_ty),
+                    });
+                }
+                self.stack.push(vec_ty)?;
+            }
+
+            // Type casting operations
+            Instruction::CastU8 => {
+                self.stack.pop()?;
+                self.stack.push(TypeTag::U8)?;
+            }
+            Instruction::CastU16 => {
+                self.stack.pop()?;
+                self.stack.push(TypeTag::U16)?;
+            }
+            Instruction::CastU32 => {
+                self.stack.pop()?;
+                self.stack.push(TypeTag::U32)?;
+            }
+            Instruction::CastU64 => {
+                self.stack.pop()?;
+                self.stack.push(TypeTag::U64)?;
+            }
+            Instruction::CastU128 => {
+                self.stack.pop()?;
+                self.stack.push(TypeTag::U128)?;
+            }
+            Instruction::CastU256 => {
+                self.stack.pop()?;
+                self.stack.push(TypeTag::U256)?;
+            }
+
+            // Function call operations
+            Instruction::Call(_) => {
+                // Function call verification is handled separately
+                // Stack effects depend on the called function's signature
+            }
+
+            // Struct operations
+            Instruction::Pack(_) => {
+                // Pack struct - pops fields and pushes struct
+                // Exact verification depends on struct definition
+            }
+            Instruction::Unpack(_) => {
+                // Unpack struct - pops struct and pushes fields
+                // Exact verification depends on struct definition
+            }
+
+            // Memory operations
+            Instruction::BorrowField(_field_idx) => {
+                // Immutable borrow of struct field
+                let struct_ref = self.stack.pop()?;
+                if !matches!(struct_ref, TypeTag::Reference(_) | TypeTag::MutableReference(_)) {
+                    return Err(VerifierError::TypeMismatch {
+                        expected: "reference".to_string(),
+                        got: format!("{:?}", struct_ref),
+                    });
+                }
+                // Push reference to field
+                self.stack.push(TypeTag::Reference(Box::new(TypeTag::U64)))?;
+            }
+            Instruction::MutBorrowField(_field_idx) => {
+                // Mutable borrow of struct field
+                let struct_ref = self.stack.pop()?;
+                if !matches!(struct_ref, TypeTag::MutableReference(_)) {
+                    return Err(VerifierError::TypeMismatch {
+                        expected: "mutable reference".to_string(),
+                        got: format!("{:?}", struct_ref),
+                    });
+                }
+                // Push mutable reference to field
+                self.stack.push(TypeTag::MutableReference(Box::new(TypeTag::U64)))?;
+            }
+
+            // Reference operations
+            Instruction::ReadRef => {
+                let _ref = self.stack.pop()?;
+                self.stack.push(TypeTag::U64)?;
+            }
+            Instruction::WriteRef => {
+                let _val = self.stack.pop()?;
+                let _ref = self.stack.pop()?;
+            }
+            Instruction::ReleaseRef => {
+                let _ref = self.stack.pop()?;
+            }
+
+            // Object operations
+            Instruction::ObjectNew => {
+                self.stack.push(TypeTag::ObjectID)?;
+            }
+            Instruction::ObjectDelete => {
+                let _obj = self.stack.pop()?;
+            }
+            Instruction::ObjectTransfer => {
+                let _to = self.stack.pop()?;
+                let _obj = self.stack.pop()?;
+            }
+            Instruction::ObjectShare => {
+                let _obj = self.stack.pop()?;
+            }
+            Instruction::ObjectFreeze => {
+                let _obj = self.stack.pop()?;
+            }
+            Instruction::ObjectGetID => {
+                let _obj = self.stack.pop()?;
+                self.stack.push(TypeTag::ObjectID)?;
+            }
+            Instruction::ObjectExists => {
+                let _id = self.stack.pop()?;
+                self.stack.push(TypeTag::Bool)?;
+            }
+            Instruction::ObjectBorrow => {
+                let _id = self.stack.pop()?;
+                self.stack.push(TypeTag::Reference(Box::new(TypeTag::ObjectID)))?;
+            }
+            Instruction::ObjectMutBorrow => {
+                let _id = self.stack.pop()?;
+                self.stack.push(TypeTag::MutableReference(Box::new(TypeTag::ObjectID)))?;
+            }
+
+            // Cryptographic operations
+            Instruction::CryptoHashBlake3 => {
+                let _data = self.stack.pop()?;
+                self.stack.push(TypeTag::Vector(Box::new(TypeTag::U8)))?;
+            }
+            Instruction::CryptoVerifySignature => {
+                let _sig = self.stack.pop()?;
+                let _msg = self.stack.pop()?;
+                let _pk = self.stack.pop()?;
+                self.stack.push(TypeTag::Bool)?;
+            }
+            Instruction::CryptoDeriveAddress => {
+                let _pk = self.stack.pop()?;
+                self.stack.push(TypeTag::Address)?;
+            }
+            Instruction::CryptoRandom(_) => {
+                self.stack.push(TypeTag::Vector(Box::new(TypeTag::U8)))?;
+            }
+
+            // Call operations
+            Instruction::CallGeneric { .. } => {
+                // Generic call - pop arguments and push return values
+                let _arg = self.stack.pop()?;
+                self.stack.push(TypeTag::U64)?;
+            }
+            Instruction::CallNative(_) => {
+                // Native call - pop arguments and push return values
+                let _arg = self.stack.pop()?;
+                self.stack.push(TypeTag::U64)?;
+            }
+
+            // Event operations
+            Instruction::EventEmit { .. } => {
+                // Emit event - pop event data
+                let _event = self.stack.pop()?;
+            }
+
+            // Transaction operations
+            Instruction::TxSender => {
+                self.stack.push(TypeTag::Address)?;
+            }
+            Instruction::TxTimestamp => {
+                self.stack.push(TypeTag::U64)?;
+            }
+            Instruction::TxDigest => {
+                // Transaction digest is a vector of bytes (32 bytes for SHA256)
+                self.stack.push(TypeTag::Vector(Box::new(TypeTag::U8)))?;
+            }
+            Instruction::FuelRemaining => {
+                self.stack.push(TypeTag::U64)?;
+            }
+            Instruction::FuelCharge(_) => {
+                // Charge fuel - no stack effect
+            }
+
+            // Debug operations
+            Instruction::DebugPrint => {
+                let _val = self.stack.pop()?;
+            }
+            Instruction::Assert => {
+                let _cond = self.stack.pop()?;
+            }
+
+            // Nop instruction
+            Instruction::Nop => {
+                // No operation
             }
         }
 

@@ -630,6 +630,8 @@ impl Default for StructAbilities {
 pub struct Module {
     /// Module name
     pub name: String,
+    /// Package ID
+    pub package: ObjectID,
     /// Bytecode version
     pub version: BytecodeVersion,
     /// Constant pool
@@ -647,6 +649,7 @@ impl Module {
     pub fn new(name: String) -> Self {
         Self {
             name,
+            package: ObjectID::new([0u8; 64]),
             version: BytecodeVersion::CURRENT,
             constants: Vec::new(),
             structs: Vec::new(),
